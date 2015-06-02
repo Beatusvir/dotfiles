@@ -215,3 +215,11 @@ nnoremap <buffer> <F5> :w !python -<cr>
 "set fileformats=unix
 " DOS fileformat
 set fileformats=dos
+
+" supress warnings for arduino
+autocmd FileType arduino
+set errorformat^=\%-G%.%#
+
+" Set modeline to detect arduino files
+" Add // vim:ft=arduino to files to be treated as arduino
+set modelines
