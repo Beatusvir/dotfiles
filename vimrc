@@ -7,17 +7,20 @@ filetype plugin indent on
 set nobackup
 set nowritebackup
 
-set nocompatible   " Disable vi-compatibility
-set t_Co=256
+" Disable vi-compatibility
+set nocompatible   
 
-colorscheme solarized
-set background=dark
-set guifont=Inconsolata\ for\ Powerline:h12
+" UI Stuff
+set t_Co=256
+"colorscheme solarized
+colorscheme darcula
+"set background=dark
+set guifont=Inconsolata\ for\ Powerline\ 12
 set guioptions-=T " Removes top toolbar
 set guioptions-=r " Removes right hand scroll bar
 set guioptions-=m " Removes menu bar
-set guioptions-=L " Removes left hand scroll bar
-set linespace=15
+set go-=L " Removes left hand scroll bar
+set linespace=15 " Adds line space
 
 set showmode                    " always show what mode we're currently editing in
 set nowrap                      " don't wrap lines
@@ -30,7 +33,6 @@ set shiftwidth=4                " number of spaces to use for autoindenting
 set shiftround                  " use multiple of shiftwidth when indenting with '<' and '>'
 set backspace=indent,eol,start  " allow backspacing over everything in insert mode
 set autoindent                  " always set autoindenting on
-set smartindent
 set copyindent                  " copy the previous indentation on autoindenting
 set number                      " always show line numbers
 set ignorecase                  " ignore case when searching
@@ -48,8 +50,6 @@ let g:mapleader = ","
 
 " Fast saves
 nmap <leader>w :w!<cr>
-
-" Fast Save and Quit
 nmap <leader>wq :wq!<cr>
 
 " Down is really the next line
@@ -63,6 +63,7 @@ imap jj <esc>
 nnoremap ,cd :cd %:p:h<CR>:pwd<CR>
 
 "easier window navigation
+
 nmap <C-h> <C-w>h
 nmap <C-j> <C-w>j
 nmap <C-k> <C-w>k
@@ -77,6 +78,10 @@ nmap 75 :vertical resize 120<cr>
 "Nerd tree
 nmap <C-n> :NERDTreeToggle<cr>
 
+"Load the current buffer in Chrome
+nmap ,c :!open -a chromium<cr>
+"nmap ,c :!open -a Google\ Chrome<cr>
+
 "Show (partial) command in the status line
 set showcmd
 
@@ -90,15 +95,35 @@ nmap :bn :BufSurfForward<cr>
 highlight Search cterm=underline
 
 " Swap files out of the project root
-set backupdir=~/vimfiles/backup/
-set directory=~/vimfiles/swap/
+set backupdir=~/.vim/backup//
+set directory=~/.vim/swap//
+
+" Run PHPUnit tests
+map <Leader>t :!phpunit %<cr>
+
+" Easy motion stuff
+let g:EasyMotion_leader_key = '<Leader>'
 
 " Powerline (Fancy thingy at bottom stuff)
 let g:Powerline_symbols = 'fancy'
 set laststatus=2   " Always show the statusline
 set encoding=utf-8 " Necessary to show Unicode glyphs
 set noshowmode " Hide the default mode text (e.g. -- INSERT -- below the statusline)
+let g:airline_powerline_fonts = 1
 
+" User shit tab for supertab
+let g:SuperTabMappingForward  = '<c-space>'
+let g:SuperTabMappingBackward = '<s-c-space>'
+
+" Use F5 to compile - run progrmas
+autocmd filetype python nnoremap <F5> :w <bar> exec '!python '.shellescape('%')<CR>
+autocmd filetype c nnoremap <F5> :w <bar> exec '!gcc '.shellescape('%').' -o '.shellescape('%:r').' && ./'.shellescape('%:r')<CR>
+autocmd filetype cpp nnoremap <F5> :w <bar> exec '!g++ '.shellescape('%').' -o '.shellescape('%:r').' && ./'.shellescape('%:r')<CR>
+autocmd filetype java nnoremap <F5> :w <bar> exec '!javac '.shellescape('%').' && java '.shellescape('%:r')<CR>
+
+" YCM stuff
+let g:ycm_confirm_extra_conf = 0
+let g:ycm_global_ycm_extra_conf = '~/.config/ycm_extra_conf.py'
 autocmd cursorhold * set nohlsearch
 autocmd cursormoved * set hlsearch
 
@@ -111,11 +136,18 @@ command! H let @/=""
 autocmd CursorMovedI * if pumvisible() == 0|pclose|endif
 autocmd InsertLeave * if pumvisible() == 0|pclose|endif
 
+" Abbreviations
+abbrev pft PHPUnit_Framework_TestCase
+
+abbrev gm !php artisan generate:model
+abbrev gc !php artisan generate:controller
+abbrev gmig !php artisan generate:migration
+
 " Auto-remove trailing spaces
 autocmd BufWritePre *.php :%s/\s\+$//e
 
 " Edit todo list for project
-nmap <leader>todo :e! C:\Users\USRSIS0129\Documents\Proyectos\Pendiente\ Puesta\ en\ Produccion\todo.txt<cr>
+nmap ,todo :e ~/todo.txt<cr>
 
 " Laravel framework commons
 nmap <leader>lr :e app/routes.php<cr>
@@ -141,6 +173,7 @@ nmap ,lf :call FacadeLookup()<cr>
 
 " Familiar commands for file/symbol browsing
 map <D-p> :CtrlP<cr>
+map <C-r> :CtrlPBufTag<cr>
 
 " Use space to search
 map <space> /
@@ -189,29 +222,7 @@ function! AddDependency()
     exec 'normal gg/construct^M:H^Mf)i, ' . typehint . ' $' . dependency . '^[/}^>O$this->^[a' . dependency . ' = $' . dependency . ';^[?{^MkOprotected $' . dependency . ';^M^[?{^MOuse ' . namespace . ';^M^['
 
     " Remove opening comma if there is only one dependency
-    exec 'normal :%s/(, /(/g '
+    exec 'normal :%s/(, /(/g
+,
 endfunction
 nmap ,2  :call AddDependency()<cr>
-
-"Powerline Config
-let g:airline_powerline_fonts = 1
-
-" User shit tab for supertab
-let g:SuperTabMappingForward  = '<c-space>'
-let g:SuperTabMappingBackward = '<s-c-space>'
-
-" Open last location
-if has("autocmd")
-  au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
-endif
-
-" Autoread file change
-set autoread
-
-" Run python script
-nnoremap <buffer> <F5> :w !python -<cr>
-
-" Unix fileformat
-"set fileformats=unix
-" DOS fileformat
-set fileformats=dos
