@@ -10,8 +10,8 @@ set nowritebackup
 set nocompatible   " Disable vi-compatibility
 set t_Co=256
 
-colorscheme solarized
-set background=dark
+colorscheme darcula
+"set background=dark
 set guifont=Inconsolata\ for\ Powerline:h12
 set guioptions-=T " Removes top toolbar
 set guioptions-=r " Removes right hand scroll bar
@@ -68,11 +68,11 @@ nmap <C-j> <C-w>j
 nmap <C-k> <C-w>k
 nmap <C-l> <C-w>l
 
-"Resize vsplit
-nmap <C-v> :vertical resize +5<cr>
-nmap 25 :vertical resize 40<cr>
-nmap 50 <c-w>=
-nmap 75 :vertical resize 120<cr>
+" "Resize vsplit
+" nmap <C-v> :vertical resize +5<cr>
+" nmap 25 :vertical resize 40<cr>
+" nmap 50 <c-w>=
+" nmap 75 :vertical resize 120<cr>
 
 "Nerd tree
 nmap <C-n> :NERDTreeToggle<cr>
@@ -127,11 +127,11 @@ nmap <leader>lc :e composer.json<cr>
 function! FacadeLookup()
     let facade = input('Facade Name: ')
     let classes = {
-\       'Form': 'Html/FormBuilder.php',
-\       'Html': 'Html/HtmlBuilder.php',
-\       'File': 'Filesystem/Filesystem.php',
-\       'Eloquent': 'Database/Eloquent/Model.php'
-\   }
+                \       'Form': 'Html/FormBuilder.php',
+                \       'Html': 'Html/HtmlBuilder.php',
+                \       'File': 'Filesystem/Filesystem.php',
+                \       'Eloquent': 'Database/Eloquent/Model.php'
+                \   }
 
     execute ":edit vendor/laravel/framework/src/Illuminate/" . classes[facade]
 endfunction
@@ -173,7 +173,7 @@ function! Class()
 
     " Open class
     exec 'normal iclass ' . name . ' {^M}^[O^['
-    
+
     exec 'normal i^M    public function __construct()^M{^M ^M}^['
 endfunction
 nmap ,1  :call Class()<cr>
@@ -202,7 +202,7 @@ let g:SuperTabMappingBackward = '<s-c-space>'
 
 " Open last location
 if has("autocmd")
-  au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+    au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 endif
 
 " Autoread file change
@@ -215,11 +215,58 @@ nnoremap <buffer> <F5> :w !python -<cr>
 "set fileformats=unix
 " DOS fileformat
 set fileformats=dos
+"
+" XML formatter
+function! DoFormatXML() range
+    " Save the file type
+    let l:origft = &ft
 
-" supress warnings for arduino
-autocmd FileType arduino
-set errorformat^=\%-G%.%#
+    " Clean the file type
+    set ft=
 
-" Set modeline to detect arduino files
-" Add // vim:ft=arduino to files to be treated as arduino
-set modelines
+    " Add fake initial tag (so we can process multiple top-level elements)
+    exe ":let l:beforeFirstLine=" . a:firstline . "-1"
+    if l:beforeFirstLine < 0
+        let l:beforeFirstLine=0
+    endif
+    exe a:lastline . "put ='</PrettyXML>'"
+    exe l:beforeFirstLine . "put ='<PrettyXML>'"
+    exe ":let l:newLastLine=" . a:lastline . "+2"
+    if l:newLastLine > line('$')
+        let l:newLastLine=line('$')
+    endif
+
+    " Remove XML header
+    exe ":" . a:firstline . "," . a:lastline . "s/<\?xml\\_.*\?>\\_s*//e"
+
+    " Recalculate last line of the edited code
+    let l:newLastLine=search('</PrettyXML>')
+
+    " Execute external formatter
+    exe ":silent " . a:firstline . "," . l:newLastLine . "!xmllint-1.0 --noblanks --format --recover -"
+
+    " Recalculate first and last lines of the edited code
+    let l:newFirstLine=search('<PrettyXML>')
+    let l:newLastLine=search('</PrettyXML>')
+
+    " Get inner range
+    let l:innerFirstLine=l:newFirstLine+1
+    let l:innerLastLine=l:newLastLine-1
+
+    " Remove extra unnecessary indentation
+    exe ":silent " . l:innerFirstLine . "," . l:innerLastLine "s/^  //e"
+
+    " Remove fake tag
+    exe l:newLastLine . "d"
+    exe l:newFirstLine . "d"
+
+    " Put the cursor at the first line of the edited code
+    exe ":" . l:newFirstLine
+
+    " Restore the file type
+    exe "set ft=" . l:origft
+endfunction
+command! -range=% FormatXML <line1>,<line2>call DoFormatXML()
+
+nmap <silent> <leader>x :%FormatXML<CR>
+vmap <silent> <leader>x :FormatXML<CR>

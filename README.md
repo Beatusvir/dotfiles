@@ -8,4 +8,4 @@ This file was copied from [JeffreyWay](https://gist.github.com/JeffreyWay/675383
 Configuration of RXVT-Unicode mainly, again, using [solarized](http://ethanschoonover.com/solarized) color theme.
 
 ### ToDo
-This repo was created from my workplace, need to add all my dotfiles from ArchLinux
+Modify script to copy fonts and vim files into their folders inside home
